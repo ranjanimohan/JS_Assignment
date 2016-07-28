@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+	<style>
+  .bar1{
+    fill: #ef0154;
+  }
+  .bar2{
+    fill: #333;
+  }
+  .bar1:hover{
+    opacity: 0.7;
+  }
+  .bar2:hover{
+    opacity: 0.7;
+  }
+	.axis {
+	  font: 13px sans-serif;
+	}
+  .y.axisRight text {
+    fill: #333;
+}
+.y.axisLeft text {
+    fill: #ef0154;
+}
+	.axis path,.axis line
+  {
+    fill: none;
+    stroke: #000;
+  }
+	</style>
+</head>
+<body>
+<h1><center>Bar chart of Aggregate of the Population and GDP of the G20 countries by continent</center></h1>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+// set the dimensions of the canvas
+var margin = {top: 70, right: 20, bottom: 70, left: 100},
+    width = 1000 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+// set the ranges
+var x = d3.scale.ordinal().rangeRoundBands([0, width], 0.7);
+
+//var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.linear().range([height, 0]),
+y1 = d3.scale.linear().range([height, 0]);
+
+// define the axis
+var xAxis = d3.svg.axis().scale(x).orient("bottom");
+// create left yAxis
+var yAxis = d3.svg.axis().scale(y).orient("left").ticks(15);
+// create right yAxis
+var yAxis1 = d3.svg.axis().scale(y1).ticks(15).orient("right");
+
+// add the SVG element
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right + 100)
+    .attr("height", height + margin.top + margin.bottom + 50)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// load the data
+d3.json("aggregate.json", function(error, data) {
+console.log(data);
+    data.forEach(function(d) {
+        d.continent = d['Continent'];
+        d.population = +d['Population'];
+        d.gdp = +d['GDP 2015'];
+    });
+
+  // scale the range of the data
+  x.domain(data.map(function(d) { return d.continent; }));
+  y.domain([0, d3.max(data, function(d) { return d.population; })]);
+  y1.domain([0, d3.max(data, function(d) { return d.gdp; })]);
+  // add axis
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-8")
+      .attr("dy", "-8")
+      .attr("transform", "rotate(-90)" );
+
+  svg.append("g")
+      .attr("class", "y axis axisLeft")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", "5")
+      .attr("dy", "10")
+      .style("text-anchor", "end")
+      .text("Population in millions 2013");
+
+  svg.append("g")
+     	  .attr("class", "y axis axisRight")
+     	  .attr("transform", "translate(" + (width) + ",0)")
+     	  .call(yAxis1)
+     	.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", "5")
+      .attr("dy", "-20")
+     	  .style("text-anchor", "end")
+     	  .text("GDP Billions (USD) 2013");
+
+  // Add bar chart
+  svg.selectAll("bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar1")
+      .attr("x", function(d) { return x(d.continent); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.population); })
+      .attr("height", function(d) { return height - y(d.population); });
+
+      svg.selectAll("bar")
+          .data(data)
+        .enter().append("rect")
+          .attr("class", "bar2")
+          .attr("x", function(d) { return x(d.continent); })
+          .attr("width", x.rangeBand())
+          .attr("transform", "translate(40)")
+          .attr("y", function(d) { return y1(d.gdp); })
+          .attr("height", function(d) { return height - y1(d.gdp); });
+
+});
+</script>
+</body>
